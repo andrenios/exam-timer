@@ -1,2 +1,2 @@
 # exam-timer
-Classroom timer for exams
+Classroom timer for exams!
