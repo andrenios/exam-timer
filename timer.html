@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Exam Timer & Info</title>
+    <style>
+        /* CSS for a clean, non-disturbing, high-contrast, projectable display */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #2c3e50;
+            /* Dark blue/gray background */
+            color: #bdc3c7;
+            /* QUIETER Gray text for high contrast */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.8s ease-in-out;
+            /* Slower, smoother transition */
+        }
+
+        /* NEW STYLE: SOFTER, PLEASANT TIME-OVER COLOR (Burgundy/Maroon and Gold) */
+        body.time-over {
+            background-color: #A4193D;
+            /* Deep burgundy/maroon */
+            color: #f1c40f;
+            /* Subtle gold/yellow text */
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            text-align: center;
+        }
+
+        /* Title Styling: Bigger and separated from timer */
+        #exam-title-display {
+            font-size: 3vw;
+            color: #bdc3c7;
+            /* Quieter gray/blue */
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            font-weight: 300;
+            transition: color 0.8s ease-in-out;
+        }
+
+        /* Title color when time is over */
+        body.time-over #exam-title-display {
+            color: #f1c40f;
+        }
+
+        /* Timer Styling: Quieter Time */
+        #timer {
+            font-size: 8vw;
+            font-weight: bold;
+            letter-spacing: 5px;
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 3px solid #7f8c8d;
+            border-radius: 10px;
+            background-color: #34495e;
+            box-shadow: 0 0 10px rgba(127, 140, 141, 0.3);
+            color: #ecf0f1;
+            /* Always bright white during the countdown */
+            transition: all 0.8s ease-in-out;
+        }
+
+        /* Timer box color when time is over */
+        body.time-over #timer {
+            background-color: #A4193D;
+            /* Slightly lighter red/maroon box */
+            border-color: #f1c40f;
+            color: #f1c40f;
+        }
+
+        /* Info Panel Styling */
+        #info-panel {
+            background-color: #34495e;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: left;
+            margin-top: 20px;
+            font-size: 1.8em;
+            line-height: 1.5;
+            color: #bdc3c7;
+            transition: all 0.8s ease-in-out;
+        }
+
+        /* Info panel color when time is over */
+        body.time-over #info-panel {
+            background-color: #A4193D;
+            color: #f1c40f;
+            /* Gold text on maroon panel */
+        }
+
+        /* Target styles for Markdown elements inside the info panel */
+        #info-panel ul {
+            list-style-type: disc;
+            padding-left: 1.5em;
+            margin: 10px 0;
+        }
+
+        /* Ensure Headings are readable when time is over */
+        body.time-over #info-panel h1,
+        body.time-over #info-panel h2,
+        body.time-over #info-panel h3 {
+            color: #f1c40f;
+            border-bottom-color: #f1c40f;
+        }
+
+        /* Configuration Panel Styling (No change) */
+        #config-panel {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 600px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+        }
+
+        #config-panel label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        #config-panel input[type="number"],
+        #config-panel input[type="text"] {
+            padding: 10px;
+            font-size: 1.2em;
+            width: calc(100% - 22px);
+            max-width: 250px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #duration-input-group {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        #config-panel button {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+
+        #config-panel button:hover {
+            background-color: #27ae60;
+        }
+
+        #info-input {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            margin-top: 5px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            color: #2c3e50;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+
+<body>
+
+    <div id="config-panel">
+        <h3>Timer Setup</h3>
+
+        <label for="title">Title:</label>
+        <input type="text" id="title" value="Operating Systems (OS) Exam" placeholder="e.g., Final Exam - Course Name">
+
+        <label for="duration">Set Duration:</label>
+        <div id="duration-input-group">
+            <input type="number" id="duration" value="60" min="1">
+            <span>minutes</span>
+        </div>
+
+        <label for="show-seconds-checkbox">Timer Display:</label>
+        <input type="checkbox" id="show-seconds-checkbox">
+        <label for="show-seconds-checkbox" style="display: inline; font-weight: normal;">Display Seconds</label>
+
+        <button onclick="startTimer()">Start Exam</button>
+
+        <h4>Rules & Information (Supports Markdown):</h4>
+        <textarea id="info-input">
+* Single Choice - one correct answer per question
+* Negative points for wrong answers
+* Student ID must be visible on your desk
+* All electronic devices must be stored away
+</textarea>
+    </div>
+
+    <div class="container">
+        <div id="exam-title-display"></div>
+
+        <div id="timer">00:00:00</div>
+
+        <div id="info-panel">
+        </div>
+    </div>
+
+    <script>
+        const body = document.body;
+        const timerDisplay = document.getElementById('timer');
+        const configPanel = document.getElementById('config-panel');
+        const titleInput = document.getElementById('title');
+        const durationInput = document.getElementById('duration');
+        const infoInput = document.getElementById('info-input');
+        const infoPanel = document.getElementById('info-panel');
+        const examTitleDisplay = document.getElementById('exam-title-display');
+        const showSecondsCheckbox = document.getElementById('show-seconds-checkbox');
+
+        let timerInterval;
+        let endTime;
+
+        // Function to update the information display using Markdown
+        function updateInfoDisplay() {
+            const markdownText = infoInput.value;
+            infoPanel.innerHTML = marked.parse(markdownText, { gfm: true });
+        }
+
+        // Function to update the title display
+        function updateTitleDisplay() {
+            examTitleDisplay.textContent = titleInput.value.trim().toUpperCase();
+        }
+
+        function updateTimer() {
+            const now = Date.now();
+            const timeRemaining = endTime - now;
+            const showSecondsConfig = showSecondsCheckbox.checked;
+
+            // Timer color is always bright white unless time is over
+            timerDisplay.style.color = '#ecf0f1';
+
+            // Check if time is up
+            if (timeRemaining <= 0) {
+                // Set the display to 00:00:00 and stop
+                timerDisplay.textContent = '00:00:00';
+
+                // Add the gentle warning color class
+                body.classList.add('time-over');
+                clearInterval(timerInterval);
+                return;
+            }
+
+            // Remove time-over class
+            body.classList.remove('time-over');
+
+            // Calculate time parts
+            let seconds = Math.floor(timeRemaining / 1000);
+            const hours = Math.floor(seconds / 3600);
+            seconds %= 3600;
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+
+            // --- NEW LOGIC: Check if we are in the final 59 seconds ---
+            // If total remaining time is less than 60 seconds (1 minute), we force show seconds.
+            const totalRemainingSeconds = Math.floor(timeRemaining / 1000);
+            const forceShowSeconds = totalRemainingSeconds < 60;
+
+            // Format numbers
+            const timeParts = [hours, minutes];
+
+            // Show seconds if config is checked OR if we are in the final 59 seconds
+            if (showSecondsConfig || forceShowSeconds) {
+                timeParts.push(remainingSeconds);
+            }
+
+            const formattedTime = timeParts
+                .map(n => n.toString().padStart(2, '0'))
+                .join(':');
+
+            timerDisplay.textContent = formattedTime;
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+
+            const durationMinutes = parseInt(durationInput.value, 10);
+            if (isNaN(durationMinutes) || durationMinutes <= 0) {
+                alert("Please enter a valid exam duration in minutes.");
+                return;
+            }
+
+            const totalDurationMs = durationMinutes * 60 * 1000;
+            endTime = Date.now() + totalDurationMs;
+
+            // Explicitly set default color on start
+            timerDisplay.style.color = '#ecf0f1';
+
+            // Hide the configuration panel
+            configPanel.style.display = 'none';
+
+            // Ensure time-over color is removed on start
+            body.classList.remove('time-over');
+
+            // Update the displayed rules and title
+            updateTitleDisplay();
+            updateInfoDisplay();
+
+            // Start the countdown
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer(); // Initial call
+        }
+
+        // Initialize the display to the full duration and title
+        function initializeDisplay() {
+            const durationMinutes = parseInt(durationInput.value, 10);
+            const hours = Math.floor(durationMinutes / 60);
+            const minutes = durationMinutes % 60;
+
+            // Initial time display based on seconds preference
+            const timeParts = [hours, minutes];
+
+            // Use the checkbox state for initialization
+            if (showSecondsCheckbox.checked) {
+                timeParts.push(0);
+            }
+
+            const formattedTime = timeParts
+                .map(n => n.toString().padStart(2, '0'))
+                .join(':');
+
+            timerDisplay.textContent = formattedTime;
+            updateTitleDisplay();
+            updateInfoDisplay();
+        }
+
+        window.onload = initializeDisplay;
+
+    </script>
+
+</body>
+
+</html>
